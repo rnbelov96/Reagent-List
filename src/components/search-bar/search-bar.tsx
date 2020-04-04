@@ -15,8 +15,11 @@ const SearchBar: React.FC<Props> = (props: Props) => {
   } = props;
   return (
     <nav className="navbar navbar-light bg-light">
-      <a href="/" className="navbar-brand font-weight-bold">Лаборатория СМАРТ-НАНОСИСТЕМ</a>
-      <form className="form-inline">
+      <span className="navbar-brand font-weight-bold">Лаборатория СМАРТ-НАНОСИСТЕМ</span>
+      <form
+        className="form-inline"
+        onSubmit={(e: React.FormEvent<HTMLFormElement>) => e.preventDefault()}
+      >
         <select
           style={{ marginRight: '20px' }}
           required

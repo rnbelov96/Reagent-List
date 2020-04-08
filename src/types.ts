@@ -9,6 +9,11 @@ export interface Substance {
   company?: string
 }
 
+export interface LoginData {
+  name: string,
+  password: string
+}
+
 export interface QueryStringData {
   search: {
     type: string,
@@ -20,5 +25,11 @@ export interface QueryStringData {
 export enum ErrorStatus {
   OK,
   DUPLICATE_CAS_NUMBER,
-  LOADING_FAILED
+  LOADING_FAILED,
+  WRONG_LOGIN_DATA
+}
+
+export enum AuthorizationStatus {
+  AUTH,
+  NO_AUTH
 }

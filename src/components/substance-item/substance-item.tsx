@@ -2,6 +2,7 @@ import * as React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPen, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Substance } from '../../types';
+import { EMPTY_FIELD_VALUE } from '../../const';
 
 interface Props {
   substance: Substance,
@@ -15,11 +16,11 @@ const SubstanceItem: React.FC<Props> = (props: Props) => {
     <tr>
       <th className="align-middle" scope="row">{substance.number}</th>
       <td className="align-middle">{substance.name}</td>
-      <td className="align-middle">{substance.amount ? substance.amount : '-'}</td>
+      <td className="align-middle">{substance.amount ? substance.amount : EMPTY_FIELD_VALUE}</td>
       <td className="align-middle">{substance.location}</td>
       <td className="align-middle">{substance.place}</td>
-      <td className="align-middle">{substance.company ? substance.company : '-'}</td>
-      <td className="align-middle">{substance.casNumber ? substance.casNumber : '-'}</td>
+      <td className="align-middle">{substance.company ? substance.company : EMPTY_FIELD_VALUE}</td>
+      <td className="align-middle">{substance.casNumber ? substance.casNumber : EMPTY_FIELD_VALUE}</td>
       <td className="d-flex flex-column justify-content-center align-items-center">
         <button
           type="button"

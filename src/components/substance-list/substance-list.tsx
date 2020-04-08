@@ -13,6 +13,9 @@ interface Props {
   onCreateButtonClick: () => void,
   errorStatus: ErrorStatus,
   isSubstancesLoading: boolean,
+  substanceToShow: number,
+  isRequestLoading: boolean,
+  onShowMoreButtonClick: () => void,
 }
 
 const SubstanceList: React.FC<Props> = (props: Props) => {
@@ -23,7 +26,12 @@ const SubstanceList: React.FC<Props> = (props: Props) => {
     onCreateButtonClick,
     errorStatus,
     isSubstancesLoading,
+    substanceToShow,
+    isRequestLoading,
+    onShowMoreButtonClick,
   } = props;
+
+  const substanceToRender = [...substanceList].splice(0, substanceToShow);
 
   const loadingErrorMessage = (
     <div className="message-block">
@@ -45,7 +53,7 @@ const SubstanceList: React.FC<Props> = (props: Props) => {
 
   const mainContent = (
     <>
-      <table className="table">
+      <table className="table mb-0">
         <thead>
           <tr>
             <th scope="col">#</th>
@@ -59,7 +67,7 @@ const SubstanceList: React.FC<Props> = (props: Props) => {
           </tr>
         </thead>
         <tbody>
-          {substanceList.map(sub => (
+          {substanceToRender.map(sub => (
             <SubstanceItem
               onEditButtonClick={onEditButtonClick}
               substance={sub}
@@ -71,6 +79,14 @@ const SubstanceList: React.FC<Props> = (props: Props) => {
       </table>
       <button
         type="button"
+        className="btn btn-primary mx-auto mb-3"
+        onClick={() => onShowMoreButtonClick()}
+        style={{ display: substanceToShow >= substanceList.length ? 'none' : 'block' }}
+      >
+        Показать больше результатов
+      </button>
+      <button
+        type="button"
         className="btn btn-primary create-button"
         onClick={() => onCreateButtonClick()}
       >
@@ -79,7 +95,7 @@ const SubstanceList: React.FC<Props> = (props: Props) => {
     </>
   );
 
-  const loadingBlock = (
+  const reagentsLoadingBlock = (
     <div className="message-block">
       <h1>Пожалуйста, подождите, идет загрузка списка реагентов.</h1>
       <div className="lds-facebook">
@@ -90,12 +106,25 @@ const SubstanceList: React.FC<Props> = (props: Props) => {
     </div>
   );
 
+  const requestLoadingBlock = (
+    <div className="lds-ring mt-5 mx-auto d-block">
+      <div />
+      <div />
+      <div />
+      <div />
+    </div>
+  );
+
   if (isSubstancesLoading) {
-    return loadingBlock;
+    return reagentsLoadingBlock;
   }
 
   if (errorStatus === ErrorStatus.LOADING_FAILED) {
     return loadingErrorMessage;
+  }
+
+  if (isRequestLoading) {
+    return requestLoadingBlock;
   }
 
   if (substanceList.length === 0) {

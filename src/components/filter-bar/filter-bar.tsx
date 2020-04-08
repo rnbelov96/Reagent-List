@@ -6,7 +6,6 @@ interface Props {
   locationCollection: Map<number, Set<string>>,
   checkedLocations: number[],
   errorStatus: ErrorStatus,
-  substanceListLength: number,
   isSubstancesLoading: boolean,
 }
 
@@ -16,14 +15,13 @@ const FilterBar: React.FC<Props> = (props: Props) => {
     onCheckboxChange,
     checkedLocations,
     errorStatus,
-    substanceListLength,
     isSubstancesLoading,
   } = props;
 
   return (
     <div
       className="filter-bar"
-      style={{ display: ((errorStatus === ErrorStatus.LOADING_FAILED) || substanceListLength === 0 || isSubstancesLoading) ? 'none' : 'flex' }}
+      style={{ display: ((errorStatus === ErrorStatus.LOADING_FAILED) || isSubstancesLoading) ? 'none' : 'flex' }}
     >
       <h2 className="filter-bar__text">Фильтр по лабораториям:</h2>
       {[...locationCollection.keys()].map((location, i) => (

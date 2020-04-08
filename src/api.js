@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://roh7771-reagent-api.glitch.me/api/v1',
+  baseURL: 'https://reagent-api.herokuapp.com/api/v1',
   timeout: 30000,
   withCredentials: true,
 });

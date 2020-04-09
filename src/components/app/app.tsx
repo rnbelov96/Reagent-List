@@ -61,11 +61,13 @@ const App: React.FC<Props> = () => {
     setSubstanceToShowCount,
   ] = React.useState<number>(SUBSTANCE_TO_SHOW_AMOUNT);
   const [isRequestLoading, setRequestLoadingStatus] = React.useState<boolean>(false);
+  const [csrfToken, setCsrfToken] = React.useState<string>('');
 
   React.useEffect(() => {
     api.request({
       url: '/users/login',
-    }).then(() => {
+    }).then(res => {
+      setCsrfToken(res.data.csrfToken);
       setSessionCheckingStatus(false);
       setAuthorizationStatus(AuthorizationStatus.AUTH);
       api.request<AllSubstancesServerResponse>({
@@ -80,7 +82,8 @@ const App: React.FC<Props> = () => {
         setErrorStatus(ErrorStatus.LOADING_FAILED);
         setSubstancesLoadingStatus(false);
       });
-    }).catch(() => {
+    }).catch(res => {
+      setCsrfToken(res.response.data.csrfToken);
       setSessionCheckingStatus(false);
     });
   }, []);
@@ -103,7 +106,6 @@ const App: React.FC<Props> = () => {
         const { data } = response;
         const { substances } = data;
         setSubstanceList(substances);
-        // setRequestLoadingStatus(false);
       });
     }
     if (queryStringData.search.value.length === 0 && queryStringData.locations.length === 0) {
@@ -115,7 +117,6 @@ const App: React.FC<Props> = () => {
         const { substances } = data;
         setLocationCollection(createLocationCollection(substances));
         setSubstanceList(substances);
-        // setRequestLoadingStatus(false);
       });
     }
   }, [queryStringData]);
@@ -200,8 +201,10 @@ const App: React.FC<Props> = () => {
     api.request({
       method: 'POST',
       url: '/users/login',
-      headers: { 'X-CSRF-TOKEN': `${getCookie('X-CSRF-TOKEN')}` },
-      data: loginData,
+      data: {
+        ...loginData,
+        _csrf: csrfToken,
+      },
     }).then(() => {
       setAuthorizationStatus(AuthorizationStatus.AUTH);
       setErrorStatus(ErrorStatus.OK);

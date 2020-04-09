@@ -13,7 +13,6 @@ import SearchBar from '../search-bar/search-bar';
 import buildQueryString from '../../utils/buildQueryString';
 import FilterBar from '../filter-bar/filter-bar';
 import SignIn from '../sign-in/sign-in';
-import getCookie from '../../utils/getCookie';
 import { SUBSTANCE_TO_SHOW_AMOUNT } from '../../const';
 
 interface Props {
@@ -138,8 +137,10 @@ const App: React.FC<Props> = () => {
     api.request<OneSubstanceServerResponse>({
       method: 'PATCH',
       url: `/substances//${substanceToUpdate._id}`,
-      headers: { 'X-CSRF-TOKEN': `${getCookie('X-CSRF-TOKEN')}` },
-      data: substanceToUpdate,
+      data: {
+        ...substanceToUpdate,
+        _csrf: csrfToken,
+      },
     }).then(response => {
       const { data } = response;
       const { substance } = data;
@@ -160,7 +161,9 @@ const App: React.FC<Props> = () => {
     api.request({
       method: 'DELETE',
       url: `/substances/${substanceToDelete._id}`,
-      headers: { 'X-CSRF-TOKEN': `${getCookie('X-CSRF-TOKEN')}` },
+      data: {
+        _csrf: csrfToken,
+      },
     }).then(() => {
       setSubstanceList(findAndDeleteSubstance(substanceList, substanceToDelete));
       handleCloseButtonClick();
@@ -229,8 +232,10 @@ const App: React.FC<Props> = () => {
     api.request<OneSubstanceServerResponse>({
       method: 'POST',
       url: '/substances',
-      headers: { 'X-CSRF-TOKEN': `${getCookie('X-CSRF-TOKEN')}` },
-      data: substanceToCreate,
+      data: {
+        _csrf: csrfToken,
+        ...substanceToCreate,
+      },
     }).then(response => {
       const { data } = response;
       const { substance } = data;

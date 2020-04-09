@@ -2,12 +2,13 @@ import * as React from 'react';
 import { LoginData, ErrorStatus } from '../../types';
 
 interface Props {
-  onLoginButtonClick: (data: LoginData) => void
+  onLoginButtonClick: (data: LoginData) => void,
+  isRequestLoading: boolean,
   errorStatus: ErrorStatus
 }
 
 const SignIn: React.FC<Props> = (props: Props) => {
-  const { onLoginButtonClick, errorStatus } = props;
+  const { onLoginButtonClick, errorStatus, isRequestLoading } = props;
 
   const nameInputEl = React.useRef<HTMLInputElement>(null);
   const passwordInputEl = React.useRef<HTMLInputElement>(null);
@@ -32,6 +33,7 @@ const SignIn: React.FC<Props> = (props: Props) => {
           className="form-control"
           id="name"
           aria-describedby="emailHelp"
+          disabled={isRequestLoading}
         />
       </div>
       <div className="form-group">
@@ -42,6 +44,7 @@ const SignIn: React.FC<Props> = (props: Props) => {
           type="password"
           className="form-control"
           id="password"
+          disabled={isRequestLoading}
         />
       </div>
       <div
@@ -51,7 +54,13 @@ const SignIn: React.FC<Props> = (props: Props) => {
       >
         Неверный логин или пароль.
       </div>
-      <button type="submit" className="btn btn-primary signin-form__button">Log In</button>
+      <button
+        type="submit"
+        className="btn btn-primary signin-form__button"
+        disabled={isRequestLoading}
+      >
+        Log In
+      </button>
     </form>
   );
 };

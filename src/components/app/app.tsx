@@ -201,6 +201,7 @@ const App: React.FC<Props> = () => {
   };
 
   const handleLoginButtonClick = (loginData: LoginData): void => {
+    setRequestLoadingStatus(true);
     api.request({
       method: 'POST',
       url: '/users/login',
@@ -211,6 +212,7 @@ const App: React.FC<Props> = () => {
     }).then(() => {
       setAuthorizationStatus(AuthorizationStatus.AUTH);
       setErrorStatus(ErrorStatus.OK);
+      setRequestLoadingStatus(false);
       api.request<AllSubstancesServerResponse>({
         url: '/substances',
       }).then(response => {
@@ -224,6 +226,7 @@ const App: React.FC<Props> = () => {
         setSubstancesLoadingStatus(false);
       });
     }).catch(() => {
+      setRequestLoadingStatus(false);
       setErrorStatus(ErrorStatus.WRONG_LOGIN_DATA);
     });
   };
@@ -349,6 +352,7 @@ const App: React.FC<Props> = () => {
         <SignIn
           onLoginButtonClick={handleLoginButtonClick}
           errorStatus={errorStatus}
+          isRequestLoading={isRequestLoading}
         />
       );
     }

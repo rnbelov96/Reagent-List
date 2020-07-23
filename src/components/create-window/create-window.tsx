@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { Substance, ErrorStatus } from '../../types';
 
 interface Props {
   substance: Substance | null,
   onCloseButtonClick: () => void,
-  locationCollection: Map<number, Set<string>>
+  locationCollection: Map<number, Set<string>>,
+  setLocationCollection: React.Dispatch<React.SetStateAction<Map<number, Set<string>>>>,
   onConfirmClick: (substance: Substance) => void,
   errorStatus: ErrorStatus
 }
@@ -16,10 +17,12 @@ const CreateWindow: React.FC<Props> = (props: Props) => {
     substance,
     onCloseButtonClick,
     locationCollection,
+    setLocationCollection,
     onConfirmClick,
     errorStatus,
   } = props;
 
+  const [isNewPlace, setNewPlaceStatus] = React.useState<boolean>(false);
   const [
     chosenLocation,
     setChosenLocation,
@@ -29,9 +32,16 @@ const CreateWindow: React.FC<Props> = (props: Props) => {
   const nameInputEl = React.useRef<HTMLInputElement>(null);
   const amountInputEl = React.useRef<HTMLInputElement>(null);
   const locationInputEl = React.useRef<HTMLSelectElement>(null);
-  const placeInputEl = React.useRef<HTMLSelectElement>(null);
+  const placeSelectInputEl = React.useRef<HTMLSelectElement>(null);
+  const placeTextInputEl = React.useRef<HTMLInputElement>(null);
   const casNumberInputEl = React.useRef<HTMLInputElement>(null);
   const companyInputEl = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (placeTextInputEl.current) {
+      placeTextInputEl.current.focus();
+    }
+  }, [isNewPlace]);
 
   return (
     <div className="edit-field">
@@ -39,11 +49,20 @@ const CreateWindow: React.FC<Props> = (props: Props) => {
         className="edit-field__form"
         onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
           e.preventDefault();
+          if (isNewPlace) {
+            const newLocationCollection = new Map(locationCollection);
+            const places = newLocationCollection.get(chosenLocation);
+            if (places) {
+              places.add(placeTextInputEl.current?.value as string);
+            }
+            setLocationCollection(newLocationCollection);
+          }
           const substanceData: Substance = {
             name: nameInputEl.current?.value as string,
             number: Number(numberInputEl.current?.value) as number,
             location: Number(locationInputEl.current?.value) as number,
-            place: placeInputEl.current?.value as string,
+            place: isNewPlace ? placeTextInputEl.current?.value as string
+              : placeSelectInputEl.current?.value as string,
             amount: amountInputEl.current?.value,
             casNumber: casNumberInputEl.current?.value,
             company: companyInputEl.current?.value,
@@ -106,15 +125,35 @@ const CreateWindow: React.FC<Props> = (props: Props) => {
         </div>
         <div className="form-group">
           <label htmlFor="place">Место</label>
-          <select
-            ref={placeInputEl}
-            defaultValue={substance ? substance.place : ''}
-            required
-            className="form-control"
-            id="place"
-          >
-            {[...locationCollection.get(chosenLocation)].map((place, i) => <option key={`${i + 1}-${place}`}>{place}</option>)}
-          </select>
+          <div className="d-flex">
+            {isNewPlace ? (
+              <input
+                ref={placeTextInputEl}
+                className="form-control mr-3"
+                placeholder="Введите название нового места"
+                type="text"
+                required
+                id="place"
+              />
+            ) : (
+              <select
+                ref={placeSelectInputEl}
+                defaultValue={substance ? substance.place : ''}
+                required
+                className="form-control mr-3"
+                id="place"
+              >
+                {[...locationCollection.get(chosenLocation)].map((place, i) => <option key={`${i + 1}-${place}`}>{place}</option>)}
+              </select>
+            )}
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setNewPlaceStatus(prevState => !prevState)}
+            >
+              <FontAwesomeIcon icon={isNewPlace ? faTimes : faPlus} />
+            </button>
+          </div>
         </div>
         <div className="form-group">
           <label htmlFor="company">Фирма</label>

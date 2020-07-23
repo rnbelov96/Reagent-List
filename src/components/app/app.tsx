@@ -291,6 +291,7 @@ const App: React.FC<Props> = () => {
             ? (
               <CreateWindow
                 locationCollection={locationCollection}
+                setLocationCollection={setLocationCollection}
                 onCloseButtonClick={handleCloseButtonClick}
                 substance={null}
                 onConfirmClick={handleCreateConfirmClick}
@@ -302,6 +303,7 @@ const App: React.FC<Props> = () => {
             ? (
               <CreateWindow
                 locationCollection={locationCollection}
+                setLocationCollection={setLocationCollection}
                 onCloseButtonClick={handleCloseButtonClick}
                 substance={substanceToEdit}
                 onConfirmClick={handleUpdateButtonClick}

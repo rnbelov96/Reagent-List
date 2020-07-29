@@ -4,15 +4,16 @@
   background-color: rgba(0, 0, 0, 0.78)
   position: fixed
   top: 0
-  display: block
+  display: flex
+  justify-content: center
+  align-items: center
+  overflow: auto
   z-index: 3
   &__form
     width: 75%
+    height: 660px
     background-color: white
     position: absolute
-    top: 50%
-    left: 50%
-    transform: translateX(-50%) translateY(-50%)
     padding: 10px 20px
     border-radius: 10px
     display: flex
@@ -26,3 +27,9 @@
       top: 3px
       right: 10px
       cursor: pointer
+
+@media (max-height: 660px) 
+  .edit-field
+    align-items: initial
+    &__form
+      margin: 40px 0

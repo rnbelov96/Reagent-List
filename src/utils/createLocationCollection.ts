@@ -1,6 +1,6 @@
-import { Substance } from '../types';
+import { SubstanceType } from '../types';
 
-export default (substances: Substance[]) => {
+export default (substances: SubstanceType[]) => {
   const locationCollection = new Map<number, Set<string>>();
 
   substances.forEach(substance => {

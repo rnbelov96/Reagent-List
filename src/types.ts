@@ -1,4 +1,4 @@
-export interface Substance {
+export type SubstanceType = {
   name: string,
   amount?: string,
   casNumber?: string,
@@ -9,12 +9,12 @@ export interface Substance {
   company?: string
 }
 
-export interface LoginData {
+export type LoginDataType = {
   name: string,
   password: string
 }
 
-export interface QueryStringData {
+export type QueryStringDataType = {
   search: {
     type: string,
     value: string,
@@ -22,14 +22,16 @@ export interface QueryStringData {
   locations: number[]
 }
 
-export enum ErrorStatus {
-  OK,
-  DUPLICATE_CAS_NUMBER,
-  LOADING_FAILED,
-  WRONG_LOGIN_DATA
-}
+export type LocationCollectionType = Map<number, Set<string>>
 
-export enum AuthorizationStatus {
-  AUTH,
-  NO_AUTH
-}
+export type AllSubstancesServerResponseType = {
+  substances: SubstanceType[];
+};
+
+export type CSRFTokenServerResponseType = {
+  csrfToken: string;
+};
+
+export type OneSubstanceServerResponseType = {
+  substance: SubstanceType;
+};

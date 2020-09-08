@@ -1,274 +1,91 @@
-import * as React from 'react';
+import React from 'react';
 import api from '../../api';
-import {
-  Substance, QueryStringData, ErrorStatus, AuthorizationStatus, LoginData,
-} from '../../types';
 import SubstanceList from '../substance-list/substance-list';
 import CreateWindow from '../create-window/create-window';
-import createLocationCollection from '../../utils/createLocationCollection';
-import findAndUpdateSubstance from '../../utils/findAndUpdateSubstance';
 import DeleteConfirmWindow from '../delete-confirm-window/delete-confirm-window';
-import findAndDeleteSubstance from '../../utils/findAndDeleteSubstance';
 import SearchBar from '../search-bar/search-bar';
-import buildQueryString from '../../utils/buildQueryString';
 import FilterBar from '../filter-bar/filter-bar';
 import SignIn from '../sign-in/sign-in';
-import { SUBSTANCE_TO_SHOW_AMOUNT } from '../../const';
+import {
+  ErrorStatus,
+  ModalWindowStatus,
+  AuthorizationStatus,
+} from '../../const';
+import { substanceActionCreators } from '../../reducer/substance/substanceReducer';
+import {
+  rootReducer,
+  combinedInitialState,
+} from '../../reducer/rootReducer/rootReducer';
+import { RootReducerType } from '../../reducer/rootReducer/types';
+import { appStatusActionCreators } from '../../reducer/appStatus/appStatusReducer';
+import context from '../../context';
+import dispatchMiddleware from '../../reducer/rootReducer/dispatchMiddleware';
+import { authActionCreators } from '../../reducer/auth/authReducer';
 
-interface Props {
-}
-
-interface AllSubstancesServerResponse {
-  substances: Substance[]
-}
-
-interface OneSubstanceServerResponse {
-  substance: Substance
-}
-
-const initialQueryStringData: QueryStringData = {
-  search: {
-    type: 'casNumber',
-    value: '',
-  },
-  locations: [],
-};
+type Props = {};
 
 const App: React.FC<Props> = () => {
-  const [substanceList, setSubstanceList] = React.useState<Substance[]>([]);
-  const [isEditWindowVisible, setEditWindowVisibility] = React.useState<boolean>(false);
-  const [isCreateWindowVisible, setCreateWindowVisibility] = React.useState<boolean>(false);
-  const [substanceToEdit, setSubstanceToEdit] = React.useState<Substance | null>(null);
-  const [isDeleteWindowVisible, setDeleteWindowVisibility] = React.useState<boolean>(false);
   const [
+    { appStatusState, authState, substancesState },
+    initialDispatch,
+  ] = React.useReducer<RootReducerType>(rootReducer, combinedInitialState);
+  const dispatch = dispatchMiddleware(initialDispatch, api);
+  const {
+    errorStatus,
+    isRequestLoading,
+    isSessionChecking,
+    modalWindowStatus,
+  } = React.useMemo(() => appStatusState, [appStatusState]);
+  const { authorizationStatus, csrfToken } = React.useMemo(() => authState, [
+    authState,
+  ]);
+  const {
     locationCollection,
-    setLocationCollection,
-  ] = React.useState<Map<number, Set<string>>>(new Map<number, Set<string>>());
-  const [
     queryStringData,
-    setQueryStringData,
-  ] = React.useState<QueryStringData>(initialQueryStringData);
-  const [errorStatus, setErrorStatus] = React.useState<ErrorStatus>(ErrorStatus.OK);
-  const [isSubstancesLoading, setSubstancesLoadingStatus] = React.useState<boolean>(true);
-  const [
-    authorizationStatus,
-    setAuthorizationStatus,
-  ] = React.useState<AuthorizationStatus>(AuthorizationStatus.NO_AUTH);
-  const [isSessionChecking, setSessionCheckingStatus] = React.useState<boolean>(true);
-  const [
-    substanceToShow,
-    setSubstanceToShowCount,
-  ] = React.useState<number>(SUBSTANCE_TO_SHOW_AMOUNT);
-  const [isRequestLoading, setRequestLoadingStatus] = React.useState<boolean>(false);
-  const [csrfToken, setCsrfToken] = React.useState<string>('');
+    substanceList,
+    substanceToEdit,
+    substancesToShow,
+  } = React.useMemo(() => substancesState, [substancesState]);
 
-  React.useEffect(() => {
-    api.request({
-      url: '/users/login',
-    }).then(res => {
-      setCsrfToken(res.data.csrfToken);
-      setSessionCheckingStatus(false);
-      setAuthorizationStatus(AuthorizationStatus.AUTH);
-      api.request<AllSubstancesServerResponse>({
-        url: '/substances',
-      }).then(response => {
-        const { data } = response;
-        const { substances } = data;
-        setLocationCollection(createLocationCollection(substances));
-        setSubstanceList(substances);
-        setSubstancesLoadingStatus(false);
-      }).catch(() => {
-        setErrorStatus(ErrorStatus.LOADING_FAILED);
-        setSubstancesLoadingStatus(false);
-      });
-    }).catch(res => {
-      setCsrfToken(res.response.data.csrfToken);
-      setSessionCheckingStatus(false);
-    });
+  const resetModalWindow = React.useCallback(() => {
+    dispatch(
+      appStatusActionCreators.setModalWindowStatus(ModalWindowStatus.NONE)
+    );
+    dispatch(substanceActionCreators.setSubstanceToEdit(null));
+    dispatch(appStatusActionCreators.setErrorStatus(ErrorStatus.OK));
   }, []);
 
   React.useEffect(() => {
-    setRequestLoadingStatus(false);
-    setSubstanceToShowCount(SUBSTANCE_TO_SHOW_AMOUNT);
-  }, [substanceList]);
+    const checkSessionAndLoadSubstances = async () => {
+      await dispatch(authActionCreators.checkSession());
+      await dispatch(substanceActionCreators.loadFullSubstanceList());
+    };
+
+    checkSessionAndLoadSubstances();
+  }, []);
 
   React.useEffect(() => {
-    if (isSubstancesLoading) {
-      return;
-    }
-    if (queryStringData.search.value.length !== 0 || queryStringData.locations.length !== 0) {
-      setRequestLoadingStatus(true);
-      api.request<AllSubstancesServerResponse>({
-        method: 'GET',
-        url: `/substances/?${buildQueryString(queryStringData)}`,
-      }).then(response => {
-        const { data } = response;
-        const { substances } = data;
-        setSubstanceList(substances);
-      });
-    }
-    if (queryStringData.search.value.length === 0 && queryStringData.locations.length === 0) {
-      setRequestLoadingStatus(true);
-      api.request<AllSubstancesServerResponse>({
-        url: '/substances',
-      }).then(response => {
-        const { data } = response;
-        const { substances } = data;
-        setLocationCollection(createLocationCollection(substances));
-        setSubstanceList(substances);
-      });
-    }
+    const querryNewData = async () => {
+      if (isSessionChecking) {
+        return;
+      }
+      if (
+        queryStringData.search.value.length !== 0 ||
+        queryStringData.locations.length !== 0
+      ) {
+        await dispatch(substanceActionCreators.querryNewData(queryStringData));
+      }
+      if (
+        queryStringData.search.value.length === 0 &&
+        queryStringData.locations.length === 0
+      ) {
+        await dispatch(substanceActionCreators.loadFullSubstanceList());
+      }
+      dispatch(substanceActionCreators.resetSubstanceToShowCount());
+    };
+
+    querryNewData();
   }, [queryStringData]);
-
-  const handleEditButtonClick = (substance: Substance): void => {
-    setSubstanceToEdit(substance);
-    setEditWindowVisibility(true);
-  };
-
-  const handleCloseButtonClick = () => {
-    setEditWindowVisibility(false);
-    setDeleteWindowVisibility(false);
-    setCreateWindowVisibility(false);
-    setSubstanceToEdit(null);
-    setErrorStatus(ErrorStatus.OK);
-  };
-
-  const handleUpdateButtonClick = (substanceToUpdate: Substance): void => {
-    api.request<OneSubstanceServerResponse>({
-      method: 'PATCH',
-      url: `/substances//${substanceToUpdate._id}`,
-      data: {
-        ...substanceToUpdate,
-        _csrf: csrfToken,
-      },
-    }).then(response => {
-      const { data } = response;
-      const { substance } = data;
-      setSubstanceList(findAndUpdateSubstance(substanceList, substance));
-      setEditWindowVisibility(false);
-      setErrorStatus(ErrorStatus.OK);
-    }).catch(() => {
-      setErrorStatus(ErrorStatus.DUPLICATE_CAS_NUMBER);
-    });
-  };
-
-  const handleDeleteButtonClick = (substance: Substance): void => {
-    setSubstanceToEdit(substance);
-    setDeleteWindowVisibility(true);
-  };
-
-  const handleDeleteConfirmClick = (substanceToDelete: Substance): void => {
-    api.request({
-      method: 'DELETE',
-      url: `/substances/${substanceToDelete._id}`,
-      data: {
-        _csrf: csrfToken,
-      },
-    }).then(() => {
-      setSubstanceList(findAndDeleteSubstance(substanceList, substanceToDelete));
-      handleCloseButtonClick();
-    });
-  };
-
-  const handleCreateButtonClick = (): void => {
-    setCreateWindowVisibility(true);
-  };
-
-  const handleSearchBarChange = (changeableInput: 'select' | 'input', value: string): void => {
-    setQueryStringData(prevState => {
-      const newSearchData = { ...prevState.search };
-      switch (changeableInput) {
-        case 'select':
-          newSearchData.type = value;
-          return {
-            ...prevState,
-            search: {
-              ...newSearchData,
-            },
-          };
-        case 'input':
-          newSearchData.value = value;
-          return {
-            ...prevState,
-            search: {
-              ...newSearchData,
-            },
-          };
-        default:
-          return prevState;
-      }
-    });
-  };
-
-  const handleLoginButtonClick = (loginData: LoginData): void => {
-    setRequestLoadingStatus(true);
-    api.request({
-      method: 'POST',
-      url: '/users/login',
-      data: {
-        ...loginData,
-        _csrf: csrfToken,
-      },
-    }).then(() => {
-      setAuthorizationStatus(AuthorizationStatus.AUTH);
-      setErrorStatus(ErrorStatus.OK);
-      setRequestLoadingStatus(false);
-      api.request<AllSubstancesServerResponse>({
-        url: '/substances',
-      }).then(response => {
-        const { data } = response;
-        const { substances } = data;
-        setLocationCollection(createLocationCollection(substances));
-        setSubstanceList(substances);
-        setSubstancesLoadingStatus(false);
-      }).catch(() => {
-        setErrorStatus(ErrorStatus.LOADING_FAILED);
-        setSubstancesLoadingStatus(false);
-      });
-    }).catch(() => {
-      setRequestLoadingStatus(false);
-      setErrorStatus(ErrorStatus.WRONG_LOGIN_DATA);
-    });
-  };
-
-  const handleCreateConfirmClick = (substanceToCreate: Substance): void => {
-    api.request<OneSubstanceServerResponse>({
-      method: 'POST',
-      url: '/substances',
-      data: {
-        _csrf: csrfToken,
-        ...substanceToCreate,
-      },
-    }).then(response => {
-      const { data } = response;
-      const { substance } = data;
-      setSubstanceList(prevState => [substance, ...prevState]);
-      handleCloseButtonClick();
-      setErrorStatus(ErrorStatus.OK);
-    }).catch(() => {
-      setErrorStatus(ErrorStatus.DUPLICATE_CAS_NUMBER);
-    });
-  };
-
-  const handleCheckboxChange = (value: number): void => {
-    setQueryStringData(prevState => {
-      const newLocationsArray = [...prevState.locations];
-      const index = queryStringData.locations.findIndex(el => el === value);
-      if (index !== -1) {
-        newLocationsArray.splice(index, 1);
-      } else {
-        newLocationsArray.push(value);
-      }
-      return {
-        ...prevState,
-        locations: newLocationsArray,
-      };
-    });
-  };
-
-  const handleShowMoreButtonClick = (): void => {
-    setSubstanceToShowCount(prevState => prevState + SUBSTANCE_TO_SHOW_AMOUNT);
-  };
 
   const renderApp = () => {
     if (isSessionChecking) {
@@ -285,66 +102,68 @@ const App: React.FC<Props> = () => {
     }
 
     if (authorizationStatus === AuthorizationStatus.AUTH) {
+      const modalWindowList = {
+        [ModalWindowStatus.CREATE]: (
+          <CreateWindow
+            locationCollection={locationCollection}
+            resetModalWindow={resetModalWindow}
+            substanceToEdit={null}
+            csrfToken={csrfToken}
+            substanceList={substanceList}
+            type={ModalWindowStatus.CREATE}
+            dispatch={dispatch}
+          />
+        ),
+        [ModalWindowStatus.DELETE]: (
+          <DeleteConfirmWindow
+            substance={substanceToEdit}
+            resetModalWindow={resetModalWindow}
+            csrfToken={csrfToken}
+            dispatch={dispatch}
+            substanceList={substanceList}
+          />
+        ),
+        [ModalWindowStatus.EDIT]: (
+          <CreateWindow
+            locationCollection={locationCollection}
+            substanceToEdit={substanceToEdit}
+            dispatch={dispatch}
+            type={ModalWindowStatus.EDIT}
+            substanceList={substanceList}
+            csrfToken={csrfToken}
+            resetModalWindow={resetModalWindow}
+          />
+        ),
+        [ModalWindowStatus.NONE]: null,
+      };
+
       return (
         <>
-          {isCreateWindowVisible
-            ? (
-              <CreateWindow
-                locationCollection={locationCollection}
-                setLocationCollection={setLocationCollection}
-                onCloseButtonClick={handleCloseButtonClick}
-                substance={null}
-                onConfirmClick={handleCreateConfirmClick}
-                errorStatus={errorStatus}
-              />
-            )
-            : null}
-          {isEditWindowVisible
-            ? (
-              <CreateWindow
-                locationCollection={locationCollection}
-                setLocationCollection={setLocationCollection}
-                onCloseButtonClick={handleCloseButtonClick}
-                substance={substanceToEdit}
-                onConfirmClick={handleUpdateButtonClick}
-                errorStatus={errorStatus}
-              />
-            )
-            : null}
-          {isDeleteWindowVisible
-            ? (
-              <DeleteConfirmWindow
-                substance={substanceToEdit}
-                onCloseButtonClick={handleCloseButtonClick}
-                onDeleteConfirmClick={handleDeleteConfirmClick}
-              />
-            )
-            : null}
+          {modalWindowList[modalWindowStatus]}
           <SearchBar
             searchSelectValue={queryStringData.search.type}
             searchInputValue={queryStringData.search.value}
-            onSearchBarChahge={handleSearchBarChange}
             errorStatus={errorStatus}
-            isSubstancesLoading={isSubstancesLoading}
+            dispatch={dispatch}
           />
           <FilterBar
             locationCollection={locationCollection}
-            onCheckboxChange={handleCheckboxChange}
-            checkedLocations={queryStringData.locations}
             errorStatus={errorStatus}
-            isSubstancesLoading={isSubstancesLoading}
+            dispatch={dispatch}
+            chosenLocations={queryStringData.locations}
           />
-          <SubstanceList
-            onEditButtonClick={handleEditButtonClick}
-            onDeleteButtonClick={handleDeleteButtonClick}
-            substanceList={substanceList}
-            onCreateButtonClick={handleCreateButtonClick}
-            errorStatus={errorStatus}
-            isSubstancesLoading={isSubstancesLoading}
-            substanceToShow={substanceToShow}
-            isRequestLoading={isRequestLoading}
-            onShowMoreButtonClick={handleShowMoreButtonClick}
-          />
+          <context.Provider value={dispatch}>
+            <SubstanceList
+              errorStatus={errorStatus}
+              isRequestLoading={isRequestLoading}
+              dispatch={dispatch}
+              substancesToRender={[...substanceList].splice(
+                0,
+                substancesToShow
+              )}
+              isSubstancesLeft={substancesToShow <= substanceList.length}
+            />
+          </context.Provider>
         </>
       );
     }
@@ -352,9 +171,10 @@ const App: React.FC<Props> = () => {
     if (authorizationStatus === AuthorizationStatus.NO_AUTH) {
       return (
         <SignIn
-          onLoginButtonClick={handleLoginButtonClick}
           errorStatus={errorStatus}
           isRequestLoading={isRequestLoading}
+          dispatch={dispatch}
+          csrfToken={csrfToken}
         />
       );
     }

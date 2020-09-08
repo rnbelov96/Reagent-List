@@ -1,10 +1,12 @@
-import { QueryStringData } from '../types';
+import { QueryStringDataType } from '../types';
 
-export default (queryStringData: QueryStringData) => {
+export default (queryStringData: QueryStringDataType) => {
   const queryString = [];
 
   if (queryStringData.search.value !== '') {
-    queryString.push(`${queryStringData.search.type}=${queryStringData.search.value}`);
+    queryString.push(
+      `${queryStringData.search.type}=${queryStringData.search.value}`,
+    );
   }
   if (queryStringData.locations.length !== 0) {
     queryString.push(`location=${queryStringData.locations.join(',')}`);

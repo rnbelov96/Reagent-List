@@ -1,6 +1,6 @@
-import { Substance } from '../types';
+import { SubstanceType } from '../types';
 
-export default (substanceList: Substance[], substance: Substance) => {
+export default (substanceList: SubstanceType[], substance: SubstanceType) => {
   const index = substanceList.findIndex(sub => sub._id === substance._id);
 
   const newSubstanceList = [...substanceList];

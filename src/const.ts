@@ -1,4 +1,4 @@
-export const SUBSTANCE_TO_SHOW_AMOUNT = 20;
+export const SUBSTANCE_TO_SHOW_AMOUNT = 7;
 
 export const EMPTY_FIELD_VALUE = '-';
 
@@ -19,4 +19,11 @@ export enum ModalWindowStatus {
   CREATE = 'CREATE',
   DELETE = 'DELETE',
   NONE = 'NONE'
+}
+
+export enum StructureStatus {
+  LOADING,
+  LOADED,
+  INCHIKEY_LOADING_FAILED,
+  LOADING_FAILED
 }

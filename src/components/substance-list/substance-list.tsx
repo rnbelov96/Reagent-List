@@ -33,7 +33,12 @@ const SubstanceList: React.FC<Props> = React.memo((props: Props) => {
     );
   }, []);
 
+  const [isScrollBlocked, setScrollBlockedStatus] = React.useState<boolean>(false);
+
   const addNewSubstances = React.useCallback(() => {
+    if (isScrollBlocked) {
+      return;
+    }
     const windowHeight = document.documentElement.clientHeight;
     const scrollHeight = Math.max(
       document.body.scrollHeight,
@@ -47,9 +52,13 @@ const SubstanceList: React.FC<Props> = React.memo((props: Props) => {
       windowHeight + window.pageYOffset > scrollHeight - 50
       && isSubstancesLeft
     ) {
+      setScrollBlockedStatus(true);
       dispatch(substanceActionCreators.addSubstanceToShowCount());
+      setTimeout(() => {
+        setScrollBlockedStatus(false);
+      }, 1500);
     }
-  }, [isSubstancesLeft]);
+  }, [isSubstancesLeft, isScrollBlocked]);
 
   const loadingErrorMessage = React.useMemo(
     () => (
@@ -90,10 +99,9 @@ const SubstanceList: React.FC<Props> = React.memo((props: Props) => {
             <tr>
               <th scope="col">#</th>
               <th scope="col">Название</th>
-              <th scope="col">Количество</th>
+              <th scope="col">Структура</th>
               <th scope="col">Лаборатория</th>
               <th scope="col">Место</th>
-              <th scope="col">Фирма</th>
               <th scope="col">CAS</th>
               <th scope="col" />
             </tr>

@@ -19,7 +19,8 @@ export type QueryStringDataType = {
     type: string,
     value: string,
   },
-  locations: number[]
+  locations: number[],
+  places: string[]
 }
 
 export type LocationCollectionType = Map<number, Set<string>>

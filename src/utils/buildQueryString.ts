@@ -11,5 +11,9 @@ export default (queryStringData: QueryStringDataType) => {
   if (queryStringData.locations.length !== 0) {
     queryString.push(`location=${queryStringData.locations.join(',')}`);
   }
+  if (queryStringData.places.length !== 0) {
+    queryString.push(`place=${queryStringData.places.join(',')}`);
+  }
+  
   return queryString.join('&');
 };

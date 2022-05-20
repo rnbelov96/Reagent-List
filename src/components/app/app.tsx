@@ -151,6 +151,7 @@ const App: React.FC<Props> = () => {
             errorStatus={errorStatus}
             dispatch={dispatch}
             chosenLocations={queryStringData.locations}
+            chosenPlaces={queryStringData.places}
           />
           <context.Provider value={dispatch}>
             <SubstanceList

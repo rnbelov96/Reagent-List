@@ -20,6 +20,7 @@ export type SubstanceActionConstTypes = {
   RESET_SUBSTANCES_TO_SHOW_COUNT: 'RESET_SUBSTANCES_TO_SHOW_COUNT';
   SET_QUERY_SEARCH_DATA: 'SET_QUERY_SEARCH_DATA';
   SET_QUERY_LOCATION_DATA: 'SET_QUERY_LOCATION_DATA';
+  SET_QUERY_PLACE_DATA: 'SET_QUERY_PLACE_DATA',
   LOAD_FULL_SUBSTANCE_LIST: 'LOAD_FULL_SUBSTANCE_LIST';
   QUERRY_NEW_DATA: 'QUERRY_NEW_DATA';
   CREATE_SUBSTANCE: 'CREATE_SUBSTANCE';
@@ -61,6 +62,11 @@ export type SetQuerySearchDataActionType = {
 export type SetQueryLocationDataActionType = {
   type: SubstanceActionConstTypes['SET_QUERY_LOCATION_DATA'];
   payload: number[];
+};
+
+export type SetQueryPlaceDataActionType = {
+  type: SubstanceActionConstTypes['SET_QUERY_PLACE_DATA'];
+  payload: string[];
 };
 
 export type LoadFullSubstanceListActionType = {
@@ -107,6 +113,7 @@ export type SubstanceActionTypes =
   | ResetSubstanceToShowCountActionType
   | SetQuerySearchDataActionType
   | SetQueryLocationDataActionType
+  | SetQueryPlaceDataActionType
   | LoadFullSubstanceListActionType
   | QuerryNewDataActionType
   | CreateSubstanceActionType

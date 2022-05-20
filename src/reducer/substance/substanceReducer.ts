@@ -22,6 +22,7 @@ import {
   CreateSubstanceActionType,
   UpdateSubstanceActionType,
   DeleteSubstanceActionType,
+  SetQueryPlaceDataActionType,
 } from './types';
 import { SUBSTANCE_TO_SHOW_AMOUNT, ErrorStatus } from '../../const';
 import { CombinedActionTypes } from '../rootReducer/types';
@@ -42,6 +43,7 @@ const substanceInitialState: SubstanceStateType = {
       value: '',
     },
     locations: [],
+    places: [],
   },
 };
 
@@ -53,6 +55,7 @@ const actionTypes: SubstanceActionConstTypes = {
   RESET_SUBSTANCES_TO_SHOW_COUNT: 'RESET_SUBSTANCES_TO_SHOW_COUNT',
   SET_QUERY_SEARCH_DATA: 'SET_QUERY_SEARCH_DATA',
   SET_QUERY_LOCATION_DATA: 'SET_QUERY_LOCATION_DATA',
+  SET_QUERY_PLACE_DATA: 'SET_QUERY_PLACE_DATA',
   LOAD_FULL_SUBSTANCE_LIST: 'LOAD_FULL_SUBSTANCE_LIST',
   QUERRY_NEW_DATA: 'QUERRY_NEW_DATA',
   CREATE_SUBSTANCE: 'CREATE_SUBSTANCE',
@@ -103,6 +106,13 @@ const substanceActionCreators = {
   ): SetQueryLocationDataActionType => ({
     type: actionTypes.SET_QUERY_LOCATION_DATA,
     payload: queryLocationData,
+  }),
+
+  setQueryPlaceData: (
+    queryPlaceData: string[],
+  ): SetQueryPlaceDataActionType => ({
+    type: actionTypes.SET_QUERY_PLACE_DATA,
+    payload: queryPlaceData,
   }),
 
   loadFullSubstanceList: (): LoadFullSubstanceListActionType => ({
@@ -163,11 +173,10 @@ const Operation = {
   ) => {
     try {
       dispatch(appStatusActionCreators.setRequestLoadingStatus(true));
-      const { data: substancesData } = await api.request<
-        AllSubstancesServerResponseType
-      >({
-        url: '/substances',
-      });
+      const { data: substancesData } =
+        await api.request<AllSubstancesServerResponseType>({
+          url: '/substances',
+        });
       dispatch(
         substanceActionCreators.setLocationCollection(
           createLocationCollection(substancesData.substances),
@@ -192,12 +201,11 @@ const Operation = {
   ) => {
     try {
       dispatch(appStatusActionCreators.setRequestLoadingStatus(true));
-      const { data: querriedData } = await api.request<
-        AllSubstancesServerResponseType
-      >({
-        method: 'GET',
-        url: `/substances/?${buildQueryString(queryStringData)}`,
-      });
+      const { data: querriedData } =
+        await api.request<AllSubstancesServerResponseType>({
+          method: 'GET',
+          url: `/substances/?${buildQueryString(queryStringData)}`,
+        });
       dispatch(
         substanceActionCreators.setSubstanceList(querriedData.substances),
       );
@@ -219,16 +227,15 @@ const Operation = {
       substanceList: SubstanceType[];
     },
   ) => {
-    const { data: createRequestData } = await api.request<
-      OneSubstanceServerResponseType
-    >({
-      method: 'POST',
-      url: '/substances',
-      data: {
-        _csrf: payload.csrfToken,
-        ...payload.substance,
-      },
-    });
+    const { data: createRequestData } =
+      await api.request<OneSubstanceServerResponseType>({
+        method: 'POST',
+        url: '/substances',
+        data: {
+          _csrf: payload.csrfToken,
+          ...payload.substance,
+        },
+      });
     dispatch(
       substanceActionCreators.setSubstanceList([
         createRequestData.substance,
@@ -246,16 +253,15 @@ const Operation = {
       substanceList: SubstanceType[];
     },
   ) => {
-    const { data: updateRequestData } = await api.request<
-      OneSubstanceServerResponseType
-    >({
-      method: 'PATCH',
-      url: `/substances/${payload.substance._id}`,
-      data: {
-        ...payload.substance,
-        _csrf: payload.csrfToken,
-      },
-    });
+    const { data: updateRequestData } =
+      await api.request<OneSubstanceServerResponseType>({
+        method: 'PATCH',
+        url: `/substances/${payload.substance._id}`,
+        data: {
+          ...payload.substance,
+          _csrf: payload.csrfToken,
+        },
+      });
     dispatch(
       substanceActionCreators.setSubstanceList(
         findAndUpdateSubstance(
@@ -284,7 +290,10 @@ const Operation = {
     });
     dispatch(
       substanceActionCreators.setSubstanceList(
-        findAndDeleteSubstance(payload.substanceList, payload.substanceToDelete),
+        findAndDeleteSubstance(
+          payload.substanceList,
+          payload.substanceToDelete,
+        ),
       ),
     );
   },
@@ -342,6 +351,16 @@ const substanceReducer = (
           locations: action.payload,
         },
       };
+
+    case actionTypes.SET_QUERY_PLACE_DATA:
+      return {
+        ...state,
+        queryStringData: {
+          ...state.queryStringData,
+          places: action.payload,
+        },
+      };
+    
 
     default:
       return state;

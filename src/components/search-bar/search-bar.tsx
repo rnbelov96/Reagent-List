@@ -11,16 +11,14 @@ type Props = {
 };
 
 const SearchBar: React.FC<Props> = React.memo((props: Props) => {
-  const {
-    searchSelectValue,
-    searchInputValue,
-    errorStatus,
-    dispatch,
-  } = props;
+  const { searchSelectValue, searchInputValue, errorStatus, dispatch } = props;
 
   const handleSearchBarChange = React.useCallback(
     (changeableInput: 'select' | 'input', value: string): void => {
-      const newSearchData = { type: searchSelectValue, value: searchInputValue };
+      const newSearchData = {
+        type: searchSelectValue,
+        value: searchInputValue,
+      };
       switch (changeableInput) {
         case 'select':
           newSearchData.type = value;
@@ -36,6 +34,41 @@ const SearchBar: React.FC<Props> = React.memo((props: Props) => {
     [searchSelectValue, searchInputValue],
   );
 
+  const setSelectSearchValue = React.useCallback(
+    (selectSearchValue: string) => {
+      switch (selectSearchValue) {
+        case 'casNumber':
+          return 'CAS RN';
+
+        case 'name':
+          return 'Название';
+
+        case 'number':
+          return 'Номер';
+
+        default:
+          return 'CAS RN';
+      }
+    },
+    [],
+  );
+
+  const transformSelectValue = React.useCallback((value: string) => {
+    switch (value) {
+      case 'CAS RN':
+        return 'casNumber';
+
+      case 'Название':
+        return 'name';
+
+      case 'Номер':
+        return 'number';
+
+      default:
+        return 'casNumber';
+    }
+  }, []);
+
   return (
     <nav className="navbar navbar-light bg-light">
       <span className="navbar-brand font-weight-bold">
@@ -48,18 +81,17 @@ const SearchBar: React.FC<Props> = React.memo((props: Props) => {
         <select
           style={{ marginRight: '20px' }}
           required
-          disabled={
-            errorStatus === ErrorStatus.LOADING_FAILED
-          }
-          value={searchSelectValue === 'casNumber' ? 'CAS RN' : 'Название'}
+          disabled={errorStatus === ErrorStatus.LOADING_FAILED}
+          value={setSelectSearchValue(searchSelectValue)}
           className="form-control"
           onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-            const value = e.target.value === 'CAS RN' ? 'casNumber' : 'name';
+            const value = transformSelectValue(e.target.value);
             handleSearchBarChange('select', value);
           }}
         >
           <option>CAS RN</option>
           <option>Название</option>
+          <option>Номер</option>
         </select>
         <input
           className="form-control mr-sm-2"
@@ -67,9 +99,7 @@ const SearchBar: React.FC<Props> = React.memo((props: Props) => {
           style={{ width: '400px' }}
           placeholder="Поиск"
           aria-label="Search"
-          disabled={
-            errorStatus === ErrorStatus.LOADING_FAILED
-          }
+          disabled={errorStatus === ErrorStatus.LOADING_FAILED}
           value={searchInputValue}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             handleSearchBarChange('input', e.target.value);
